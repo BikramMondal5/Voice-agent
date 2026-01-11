@@ -39,10 +39,7 @@ startBtn.addEventListener("click", async () => {
             model: {
                 provider: "google",
                 model: "gemini-2.5-flash",
-                systemPrompt: `
-You are a knowledgeable, concise, and helpful AI assistant.
-Respond clearly and politely.
-        `.trim()
+                systemPrompt: import.meta.env.VITE_SYSTEM_INSTRUCTION || 'You are a knowledgeable, concise, and helpful AI assistant. Respond clearly and politely.'
             },
 
             // Speech pipeline settings
