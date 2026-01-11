@@ -18,6 +18,9 @@ import { useThreeJs } from "../utils/ThreeJsContext";
 import { getVapi } from "../utils/vapi";
 import type Vapi from "@vapi-ai/web";
 
+// Import LangChain memory
+import { getChatMemory } from "../utils/chatMemory";
+
 // API configuration - Get from environment variables
 const getApiKey = () => {
     if (typeof window !== 'undefined') {
@@ -66,6 +69,9 @@ const ChatWidget = () => {
     const [vapi, setVapi] = useState<Vapi | null>(null);
     const [isCallActive, setIsCallActive] = useState(false);
     const [callStatus, setCallStatus] = useState<string>("");
+
+    // Initialize chat memory
+    const chatMemory = useRef(typeof window !== 'undefined' ? getChatMemory() : null);
 
 
     // Auto scroll to bottom of chat
@@ -189,14 +195,26 @@ const ChatWidget = () => {
         console.log('Using API key:', API_KEY.substring(0, 10) + '...');
 
         try {
+            // Get conversation history from memory
+            const conversationHistory = chatMemory.current
+                ? await chatMemory.current.getFormattedHistory()
+                : "";
+
+            // Build context with system prompt and conversation history
+            let contextText = BIKRAM_AI_PROMPT;
+
+            if (conversationHistory) {
+                contextText += `\n\nPrevious conversation:\n${conversationHistory}`;
+            }
+
+            contextText += `\n\nUser message: ${userMessage}`;
+
             const requestBody = {
                 contents: [
                     {
                         parts: [
                             {
-                                text: `${BIKRAM_AI_PROMPT}
-
-User message: ${userMessage}`
+                                text: contextText
                             }
                         ]
                     }
@@ -259,6 +277,11 @@ User message: ${userMessage}`
 
             const currentMessage = inputMessage;
 
+            // Add user message to memory
+            if (chatMemory.current) {
+                await chatMemory.current.addUserMessage(currentMessage);
+            }
+
             const typingTimeout = setTimeout(() => {
                 if (isTyping) {
                     const tempMessage: Message = {
@@ -297,6 +320,11 @@ User message: ${userMessage}`
                 };
 
                 setMessages((prev) => [...prev, botResponse]);
+
+                // Add AI response to memory
+                if (chatMemory.current) {
+                    await chatMemory.current.addAIMessage(response);
+                }
             } catch (error) {
                 console.error("Error in AI response:", error);
 
@@ -480,6 +508,20 @@ User message: ${userMessage}`
                             </div>
                         </div>
                         <div className="flex items-center gap-1">
+                            <button
+                                className="p-1 rounded-full hover:bg-white/10 transition-colors"
+                                onClick={async () => {
+                                    if (chatMemory.current && confirm('Clear conversation history?')) {
+                                        await chatMemory.current.clearHistory();
+                                        setMessages([]);
+                                    }
+                                }}
+                                title="Clear chat history"
+                            >
+                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
                             <button
                                 className="p-1 rounded-full hover:bg-white/10 transition-colors"
                                 onClick={() => setMinimized(!minimized)}
