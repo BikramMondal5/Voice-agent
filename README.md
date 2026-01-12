@@ -56,11 +56,6 @@ npm run dev
 
 6. **Open your browser** and navigate to `http://localhost:3000` to experience the voice agent.
 
-## 📸 Screenshot
-
-![Voice Agent Interface](screenshot.png)
-*Interactive voice-enabled chat interface with 3D visualization*
-
 ## 🚀 How to Use
 
 1. 🎯 **Launch the app** – Open the application in your browser
@@ -99,12 +94,3 @@ Feel free to:
 
 This project is licensed under the **MIT License** – see the [LICENSE](LICENSE) file for details.
 
----
-
-<div align="center">
-
-Made with ❤️ by [Bikram Mondal](https://github.com/BikramMondal5)
-
-⭐ **Star this repo** if you find it helpful!
-
-</div>
